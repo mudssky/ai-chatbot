@@ -1,9 +1,11 @@
 'use client';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, Settings, Sun, Moon, LogOut } from 'lucide-react';
 import Image from 'next/image';
 import type { User } from 'next-auth';
 import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
+import { useState } from 'react';
+import { ConfigDialog } from './config-dialog';
 
 import {
   DropdownMenu,
@@ -20,6 +22,7 @@ import {
 
 export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, theme } = useTheme();
+  const [showConfig, setShowConfig] = useState(false);
 
   return (
     <SidebarMenu>
@@ -46,25 +49,33 @@ export function SidebarUserNav({ user }: { user: User }) {
               className="cursor-pointer"
               onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
+              {theme === 'light' ? <Moon className="size-4" /> : <Sun className="size-4" />}
               {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setShowConfig(true)}>
+              <Settings className="size-4" />
+              Config
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <button
                 type="button"
-                className="w-full cursor-pointer"
+                className="w-full cursor-pointer flex items-center gap-2"
                 onClick={() => {
                   signOut({
                     redirectTo: '/',
                   });
                 }}
               >
+                <LogOut className="size-4" />
                 Sign out
               </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      <ConfigDialog open={showConfig} onOpenChange={setShowConfig} />
     </SidebarMenu>
   );
 }
