@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export function ConfigDialog({
   open,
@@ -20,22 +20,20 @@ export function ConfigDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>配置</AlertDialogTitle>
-          <AlertDialogDescription>
-            在这里管理你的应用配置。
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="py-6">
-          {/* 这里可以添加配置项 */}
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>关闭</AlertDialogCancel>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[60vw] size-full max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>配置</DialogTitle>
+          <DialogDescription>在这里管理你的应用配置。</DialogDescription>
+        </DialogHeader>
+        <div className="py-6">{/* 这里可以添加配置项 */}</div>
+        {/* <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">关闭</Button>
+          </DialogClose>
           <Button type="submit">保存</Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </DialogFooter> */}
+      </DialogContent>
+    </Dialog>
   );
 }
