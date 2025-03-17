@@ -12,12 +12,13 @@ import {
   reasoningModel,
   titleModel,
 } from './models.test';
+import {deepseek} from '@ai-sdk/deepseek'
 
 export const myProvider = isTestEnvironment
   ? customProvider({
       languageModels: {
-        'chat-model-small': chatModel,
-        'chat-model-large': chatModel,
+        'deepseek-chat': chatModel,
+        'deepseek-reasoner': chatModel,
         'chat-model-reasoning': reasoningModel,
         'title-model': titleModel,
         'artifact-model': artifactModel,
@@ -25,14 +26,14 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model-small': openai('gpt-4o-mini'),
-        'chat-model-large': openai('gpt-4o'),
-        'chat-model-reasoning': wrapLanguageModel({
-          model: fireworks('accounts/fireworks/models/deepseek-r1'),
-          middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),
-        'title-model': openai('gpt-4-turbo'),
-        'artifact-model': openai('gpt-4o-mini'),
+        'deepseek-chat': deepseek('deepseek-chat'),
+        'deepseek-reasoner': deepseek('deepseek-reasoner'),
+        // 'chat-model-reasoning': wrapLanguageModel({
+        //   model: fireworks('accounts/fireworks/models/deepseek-r1'),
+        //   middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        // }),
+        'title-model': deepseek('deepseek-chat'),
+        // 'artifact-model': openai('gpt-4o-mini'),
       },
       imageModels: {
         'small-model': openai.image('dall-e-2'),

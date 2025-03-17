@@ -39,11 +39,12 @@ export const systemPrompt = ({
 }: {
   selectedChatModel: string;
 }) => {
-  if (selectedChatModel === 'chat-model-reasoning') {
-    return regularPrompt;
-  } else {
-    return `${regularPrompt}\n\n${artifactsPrompt}`;
-  }
+  return regularPrompt
+  // if (selectedChatModel === 'chat-model-reasoning') {
+  //   return regularPrompt;
+  // } else {
+  //   return `${regularPrompt}\n\n${artifactsPrompt}`;
+  // }
 };
 
 export const codePrompt = `
