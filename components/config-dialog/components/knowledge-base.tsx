@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PlusIcon } from "@/components/icons";
-import { Separator } from "@/components/ui/separator";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PlusIcon } from '@/components/icons';
+import { Separator } from '@/components/ui/separator';
 
 type KnowledgeBase = {
   id: string;
@@ -26,14 +26,14 @@ export function KnowledgeBaseConfig() {
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<
     string | null
   >(null);
-  const [newKnowledgeBaseName, setNewKnowledgeBaseName] = useState("");
+  const [newKnowledgeBaseName, setNewKnowledgeBaseName] = useState('');
   const [newKnowledgeBaseDescription, setNewKnowledgeBaseDescription] =
-    useState("");
+    useState('');
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([
     {
-      id: "1",
-      name: "示例知识库",
-      description: "这是一个示例知识库",
+      id: '1',
+      name: '示例知识库',
+      description: '这是一个示例知识库',
       createdAt: new Date(),
     },
   ]);
@@ -49,8 +49,8 @@ export function KnowledgeBaseConfig() {
     };
 
     setKnowledgeBases([...knowledgeBases, newKnowledgeBase]);
-    setNewKnowledgeBaseName("");
-    setNewKnowledgeBaseDescription("");
+    setNewKnowledgeBaseName('');
+    setNewKnowledgeBaseDescription('');
     setSelectedKnowledgeBase(newKnowledgeBase.id);
   };
 
@@ -60,7 +60,7 @@ export function KnowledgeBaseConfig() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     // 处理文件上传逻辑
-    console.log("Files uploaded:", e.target.files);
+    console.log('Files uploaded:', e.target.files);
   };
 
   return (
@@ -76,7 +76,7 @@ export function KnowledgeBaseConfig() {
               {knowledgeBases.map((kb) => (
                 <div
                   key={kb.id}
-                  className={`p-3 rounded-md cursor-pointer hover:bg-muted transition-colors ${selectedKnowledgeBase === kb.id ? "bg-muted" : ""}`}
+                  className={`p-3 rounded-md cursor-pointer hover:bg-muted transition-colors ${selectedKnowledgeBase === kb.id ? 'bg-muted' : ''}`}
                   onClick={() => handleSelectKnowledgeBase(kb.id)}
                 >
                   <div className="font-medium">{kb.name}</div>
@@ -139,7 +139,7 @@ export function KnowledgeBaseConfig() {
             <CardTitle>
               {selectedKnowledgeBase
                 ? `${knowledgeBases.find((kb) => kb.id === selectedKnowledgeBase)?.name} - 文件管理`
-                : "请先选择知识库"}
+                : '请先选择知识库'}
             </CardTitle>
           </CardHeader>
           <CardContent>

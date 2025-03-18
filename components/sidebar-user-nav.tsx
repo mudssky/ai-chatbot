@@ -49,7 +49,11 @@ export function SidebarUserNav({ user }: { user: User }) {
               className="cursor-pointer"
               onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
-              {theme === 'light' ? <Moon className="size-4" /> : <Sun className="size-4" />}
+              {theme === 'light' ? (
+                <Moon className="size-4" />
+              ) : (
+                <Sun className="size-4" />
+              )}
               {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
             </DropdownMenuItem>
             <DropdownMenuSeparator />

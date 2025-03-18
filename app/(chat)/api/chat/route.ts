@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       messages: Array<Message>;
       selectedChatModel: string;
     } = await request.json();
- console.log({selectedChatModel});
+    console.log({ selectedChatModel });
     const session = await auth();
 
     if (!session || !session.user || !session.user.id) {
@@ -70,8 +70,6 @@ export async function POST(request: Request) {
       messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
     });
 
-   
-    
     return createDataStreamResponse({
       execute: (dataStream) => {
         const result = streamText({

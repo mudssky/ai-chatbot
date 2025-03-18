@@ -12,7 +12,7 @@ import {
   reasoningModel,
   titleModel,
 } from './models.test';
-import {deepseek} from '@ai-sdk/deepseek'
+import { deepseek } from '@ai-sdk/deepseek';
 
 export const myProvider = isTestEnvironment
   ? customProvider({

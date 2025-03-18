@@ -39,7 +39,7 @@ export const systemPrompt = ({
 }: {
   selectedChatModel: string;
 }) => {
-  return regularPrompt
+  return regularPrompt;
   // if (selectedChatModel === 'chat-model-reasoning') {
   //   return regularPrompt;
   // } else {
