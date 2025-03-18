@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { KnowledgeBaseConfig } from "./components/knowledge-base";
 
 export function ConfigDialog({
   open,
@@ -49,33 +50,7 @@ export function ConfigDialog({
               <TabsTrigger value="general">通用设置</TabsTrigger>
             </TabsList>
             <TabsContent value="knowledge-base" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>知识库配置</CardTitle>
-                  <CardDescription>配置知识库相关的设置项</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="kb-path">知识库路径</Label>
-                    <Input id="kb-path" placeholder="请输入知识库路径" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="index-type">索引类型</Label>
-                    <Select>
-                      <SelectTrigger id="index-type">
-                        <SelectValue placeholder="选择索引类型" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="faiss">Faiss</SelectItem>
-                        <SelectItem value="milvus">Milvus</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button>保存知识库配置</Button>
-                </CardFooter>
-              </Card>
+              <KnowledgeBaseConfig />
             </TabsContent>
             <TabsContent value="general" className="mt-6">
               <Card>
