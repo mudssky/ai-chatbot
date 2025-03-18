@@ -9,6 +9,8 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,
+  vector,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -113,3 +115,44 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
+
+export const knowledgeBase = pgTable('KnowledgeBase', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: timestamp('createdAt').notNull(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+});
+
+export type KnowledgeBase = InferSelectModel<typeof knowledgeBase>;
+
+export const knowledgeDocument = pgTable('KnowledgeDocument', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  knowledgeBaseId: uuid('knowledgeBaseId')
+    .notNull()
+    .references(() => knowledgeBase.id),
+  fileName: text('fileName').notNull(),
+  filePath: text('filePath').notNull(),
+  fileType: varchar('fileType', { length: 32 }).notNull(),
+  fileSize: varchar('fileSize', { length: 32 }).notNull(),
+  chunkSize: integer('chunkSize').notNull().default(1000),
+  chunkOverlap: integer('chunkOverlap').notNull().default(200),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt').notNull(),
+});
+
+export const knowledgeChunk = pgTable('KnowledgeChunk', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  documentId: uuid('documentId')
+    .notNull()
+    .references(() => knowledgeDocument.id),
+  content: text('content').notNull(),
+  metadata: json('metadata').notNull(),
+  vector: vector('vector', { dimensions: 1024 }),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt').notNull(),
+});
+
+export type KnowledgeDocument = InferSelectModel<typeof knowledgeDocument>;
