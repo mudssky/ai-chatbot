@@ -40,3 +40,17 @@ export async function addKnowledgeBase({
     throw error;
   }
 }
+// 删除知识库
+export async function deleteKnowledgeBase({
+  id,
+}: {
+  id: string;
+}) {
+  try {
+    const res = await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
+    return res;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
