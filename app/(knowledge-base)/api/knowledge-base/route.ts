@@ -3,25 +3,16 @@ import {
   getKnowledgeBase,
   addKnowledgeBase,
 } from '@/lib/db/queries/knowledge-base';
-import { auth } from '@/app/(auth)/auth';
+import { withAuth } from '@/lib/auth/with-auth';
 
-export async function GET() {
-  const session = await auth();
-  if (!session || !session.user) {
-    return Response.json('Unauthorized!', { status: 401 });
-  }
-  const knows = await getKnowledgeBase({ userId: session.user.id ?? '' });
+export const GET = withAuth(async ({ userId }) => {
+  const knows = await getKnowledgeBase({ userId });
   return NextResponse.json(knows);
-}
+});
 
-export async function POST(request: Request) {
-  const session = await auth();
-  if (!session || !session.user) {
-    return NextResponse.json('Unauthorized!', { status: 401 });
-  }
-
+export const POST = withAuth(async ({ request, userId }) => {
   try {
-    const { name, description } = await request.json();
+    const { name, description } = (await request?.json()) ?? {};
 
     if (!name || !description) {
       return NextResponse.json(
@@ -31,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     const newEntry = await addKnowledgeBase({
-      userId: session.user.id ?? '',
+      userId,
       name,
       description,
     });
@@ -44,4 +35,4 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
+});

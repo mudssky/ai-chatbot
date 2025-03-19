@@ -25,12 +25,16 @@ export async function addKnowledgeBase({
   userId,
 }: Omit<KnowledgeBase, 'createdAt' | 'id'>) {
   try {
-    return await db.insert(knowledgeBase).values({
-      name,
-      description,
-      userId,
-      createdAt: new Date(),
-    });
+    const res = await db
+      .insert(knowledgeBase)
+      .values({
+        name,
+        description,
+        userId,
+        createdAt: new Date(),
+      })
+      .returning();
+    return res;
   } catch (error) {
     console.log(error);
     throw error;

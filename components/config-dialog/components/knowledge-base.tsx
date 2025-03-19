@@ -98,7 +98,7 @@ export function KnowledgeBaseConfig() {
       if (!response.ok) throw new Error("添加失败");
 
       const newEntry = await response.json();
-      setKnowledgeBases((prev) => [...prev, newEntry]);
+      setKnowledgeBases((prev) => [...prev, ...newEntry]);
       form.reset();
       setSelectedKnowledgeBase(newEntry.id);
       toast.success("知识库添加成功");
@@ -129,7 +129,8 @@ export function KnowledgeBaseConfig() {
             <div className="space-y-4">
               {knowledgeBases?.length > 0 ? (
                 knowledgeBases.map((kb) => (
-                  <div
+                  // biome-ignore lint/nursery/noStaticElementInteractions: <explanation>
+<div
                     key={kb.id}
                     className={`p-3 rounded-md cursor-pointer hover:bg-muted transition-colors ${selectedKnowledgeBase === kb.id ? "bg-muted" : ""}`}
                     onClick={() => handleSelectKnowledgeBase(kb.id)}
