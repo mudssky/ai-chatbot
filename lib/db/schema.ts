@@ -150,7 +150,7 @@ export const knowledgeChunk = pgTable('KnowledgeChunk', {
     .references(() => knowledgeDocument.id),
   content: text('content').notNull(),
   metadata: json('metadata').notNull(),
-  vector: vector('vector', { dimensions: 1024 }),
+  vector: vector('embedding', { dimensions: 1024 }).notNull(),
   createdAt: timestamp('createdAt').notNull(),
   updatedAt: timestamp('updatedAt').notNull(),
 });

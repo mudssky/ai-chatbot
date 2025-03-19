@@ -1,19 +1,32 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import * as React from "react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { PlusIcon } from '@/components/icons';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { PlusIcon } from "@/components/icons";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { DatabaseIcon } from "lucide-react";
+import dayjs from "dayjs";
 
 type KnowledgeBase = {
   id: string;
@@ -22,36 +35,77 @@ type KnowledgeBase = {
   createdAt: Date;
 };
 
+// 定义表单验证模式
+const formSchema = z.object({
+  name: z.string().min(2, "名称至少需要2个字符").max(50, "名称最多50个字符"),
+  description: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 export function KnowledgeBaseConfig() {
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<
     string | null
   >(null);
-  const [newKnowledgeBaseName, setNewKnowledgeBaseName] = useState('');
-  const [newKnowledgeBaseDescription, setNewKnowledgeBaseDescription] =
-    useState('');
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([
     {
-      id: '1',
-      name: '示例知识库',
-      description: '这是一个示例知识库',
+      id: "1",
+      name: "示例知识库",
+      description: "这是一个示例知识库",
       createdAt: new Date(),
     },
   ]);
+  
+  // 初始化表单
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+    },
+  });
+  
+  const isSubmitting = form.formState.isSubmitting;
 
-  const handleAddKnowledgeBase = () => {
-    if (!newKnowledgeBaseName.trim()) return;
+  // 新增获取知识库列表的方法
+  const fetchKnowledgeBases = async () => {
+    try {
+      const response = await fetch("/api/knowledge-base");
+      if (!response.ok) throw new Error("获取失败");
+      const data = await response.json();
+      setKnowledgeBases(data);
+    } catch (error) {
+      toast.error("获取知识库列表失败");
+    }
+  };
 
-    const newKnowledgeBase: KnowledgeBase = {
-      id: Date.now().toString(),
-      name: newKnowledgeBaseName,
-      description: newKnowledgeBaseDescription,
-      createdAt: new Date(),
-    };
+  // 初始化加载数据
+  useEffect(() => {
+    fetchKnowledgeBases();
+  }, []);
 
-    setKnowledgeBases([...knowledgeBases, newKnowledgeBase]);
-    setNewKnowledgeBaseName('');
-    setNewKnowledgeBaseDescription('');
-    setSelectedKnowledgeBase(newKnowledgeBase.id);
+  // 表单提交处理
+  const onSubmit = async (values: FormValues) => {
+    try {
+      const response = await fetch("/api/knowledge-base", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) throw new Error("添加失败");
+
+      const newEntry = await response.json();
+      setKnowledgeBases((prev) => [...prev, newEntry]);
+      form.reset();
+      setSelectedKnowledgeBase(newEntry.id);
+      toast.success("知识库添加成功");
+    } catch (error) {
+      console.error("添加知识库失败:", error);
+      toast.error("添加知识库失败");
+    }
   };
 
   const handleSelectKnowledgeBase = (id: string) => {
@@ -60,7 +114,7 @@ export function KnowledgeBaseConfig() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     // 处理文件上传逻辑
-    console.log('Files uploaded:', e.target.files);
+    console.log("Files uploaded:", e.target.files);
   };
 
   return (
@@ -73,23 +127,35 @@ export function KnowledgeBaseConfig() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {knowledgeBases.map((kb) => (
-                <div
-                  key={kb.id}
-                  className={`p-3 rounded-md cursor-pointer hover:bg-muted transition-colors ${selectedKnowledgeBase === kb.id ? 'bg-muted' : ''}`}
-                  onClick={() => handleSelectKnowledgeBase(kb.id)}
-                >
-                  <div className="font-medium">{kb.name}</div>
-                  {kb.description && (
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {kb.description}
+              {knowledgeBases?.length > 0 ? (
+                knowledgeBases.map((kb) => (
+                  <div
+                    key={kb.id}
+                    className={`p-3 rounded-md cursor-pointer hover:bg-muted transition-colors ${selectedKnowledgeBase === kb.id ? "bg-muted" : ""}`}
+                    onClick={() => handleSelectKnowledgeBase(kb.id)}
+                  >
+                    <div className="font-medium">{kb.name}</div>
+                    {kb.description && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {kb.description}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      创建时间: {dayjs (kb.createdAt).format()}
                     </div>
-                  )}
-                  <div className="text-xs text-muted-foreground mt-1">
-                    创建时间: {kb.createdAt.toLocaleString()}
                   </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="rounded-full bg-muted p-3 mb-3">
+                    <DatabaseIcon className="size-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-sm font-medium">暂无知识库</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    请使用下方表单创建您的第一个知识库
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -98,37 +164,49 @@ export function KnowledgeBaseConfig() {
           <CardHeader>
             <CardTitle>新增知识库</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="kb-name">知识库名称</Label>
-              <Input
-                id="kb-name"
-                placeholder="请输入知识库名称"
-                value={newKnowledgeBaseName}
-                onChange={(e) => setNewKnowledgeBaseName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="kb-description">知识库描述</Label>
-              <Input
-                id="kb-description"
-                placeholder="请输入知识库描述（可选）"
-                value={newKnowledgeBaseDescription}
-                onChange={(e) => setNewKnowledgeBaseDescription(e.target.value)}
-              />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button
-              onClick={handleAddKnowledgeBase}
-              disabled={!newKnowledgeBaseName.trim()}
-            >
-              <span className="mr-2">
-                <PlusIcon />
-              </span>
-              添加知识库
-            </Button>
-          </CardFooter>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>知识库名称</FormLabel>
+                      <FormControl>
+                        <Input placeholder="请输入知识库名称" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>知识库描述</FormLabel>
+                      <FormControl>
+                        <Input placeholder="请输入知识库描述（可选）" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+              <CardFooter>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  <span className="mr-2">
+                    <PlusIcon />
+                  </span>
+                  {isSubmitting ? "添加中..." : "添加知识库"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
         </Card>
       </div>
 
@@ -138,8 +216,8 @@ export function KnowledgeBaseConfig() {
           <CardHeader>
             <CardTitle>
               {selectedKnowledgeBase
-                ? `${knowledgeBases.find((kb) => kb.id === selectedKnowledgeBase)?.name} - 文件管理`
-                : '请先选择知识库'}
+                ? `${knowledgeBases?.find((kb) => kb.id === selectedKnowledgeBase)?.name} - 文件管理`
+                : "请先选择知识库"}
             </CardTitle>
           </CardHeader>
           <CardContent>
