@@ -29,6 +29,7 @@ import { DatabaseIcon } from 'lucide-react';
 import dayjs from 'dayjs';
 import { confirm } from '@/components/confirm';
 import { AsyncButton } from '@/components/AsyncButton';
+import { cn } from '@/lib/utils';
 type KnowledgeBase = {
   id: string;
   name: string;
@@ -49,12 +50,12 @@ export function KnowledgeBaseConfig() {
     string | null
   >(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([
-    {
-      id: '1',
-      name: '示例知识库',
-      description: '这是一个示例知识库',
-      createdAt: new Date(),
-    },
+    // {
+    //   id: '1',
+    //   name: '示例知识库',
+    //   description: '这是一个示例知识库',
+    //   createdAt: new Date(),
+    // },
   ]);
 
   // 初始化表单
@@ -144,38 +145,40 @@ export function KnowledgeBaseConfig() {
             <CardTitle>知识库列表</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[500px] overflow-auto">
               {knowledgeBases?.length > 0 ? (
                 knowledgeBases.map((kb) => (
                   // biome-ignore lint/nursery/noStaticElementInteractions: <explanation>
                   <div
                     key={kb.id}
-                    className={`p-3 rounded-md cursor-pointer hover:bg-muted transition-colors ${selectedKnowledgeBase === kb.id ? 'bg-muted' : ''}`}
+                    className={cn(
+                      'p-3 rounded-md cursor-pointer hover:bg-muted transition-colors',
+                      selectedKnowledgeBase === kb.id ? 'bg-muted' : '',
+                      'flex justify-between',
+                    )}
                     onClick={() => handleSelectKnowledgeBase(kb.id)}
                   >
-                    <div className="flex space-between w-full">
-                      <div>
-                        <div className="font-medium">{kb.name}</div>{' '}
-                        {kb.description && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {kb.description}
-                          </div>
-                        )}
-                        <div className="text-xs text-muted-foreground mt-1">
-                          创建时间: {dayjs(kb.createdAt).format()}
+                    <div>
+                      <div className="font-medium">{kb.name}</div>{' '}
+                      {kb.description && (
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {kb.description}
                         </div>
+                      )}
+                      <div className="text-xs text-muted-foreground mt-1">
+                        创建时间: {dayjs(kb.createdAt).format()}
                       </div>
-                      <div>
-                        {/* 添加删除按钮 */}
-                        <AsyncButton
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive/80 mt-1"
-                          onClick={async () => await handleDelClick(kb)}
-                        >
-                          删除
-                        </AsyncButton>
-                      </div>
+                    </div>
+                    <div>
+                      {/* 添加删除按钮 */}
+                      <AsyncButton
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive/80 mt-1"
+                        onClick={async () => await handleDelClick(kb)}
+                      >
+                        删除
+                      </AsyncButton>
                     </div>
                   </div>
                 ))
