@@ -23,19 +23,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { PlusIcon } from '@/components/icons';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { DatabaseIcon } from 'lucide-react';
 import dayjs from 'dayjs';
 import { confirm } from '@/components/confirm';
 import { AsyncButton } from '@/components/AsyncButton';
 import { cn } from '@/lib/utils';
-type KnowledgeBase = {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: Date;
-};
+import { UploadArea } from './knowledge-upload';
+import type { KnowledgeBase } from '@/lib/db/schema';
 
 // 定义表单验证模式
 const formSchema = z.object({
@@ -46,9 +41,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function KnowledgeBaseConfig() {
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<
-    string | null
-  >(null);
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] =
+    useState<KnowledgeBase | null>(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([
     // {
     //   id: '1',
@@ -102,7 +96,7 @@ export function KnowledgeBaseConfig() {
       const newEntry = await response.json();
       setKnowledgeBases((prev) => [...prev, ...newEntry]);
       form.reset();
-      setSelectedKnowledgeBase(newEntry.id);
+      setSelectedKnowledgeBase(newEntry?.[0]);
       toast.success('知识库添加成功');
     } catch (error) {
       console.error('添加知识库失败:', error);
@@ -110,8 +104,8 @@ export function KnowledgeBaseConfig() {
     }
   };
 
-  const handleSelectKnowledgeBase = (id: string) => {
-    setSelectedKnowledgeBase(id);
+  const handleSelectKnowledgeBase = (kb: KnowledgeBase) => {
+    setSelectedKnowledgeBase(kb);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,10 +147,10 @@ export function KnowledgeBaseConfig() {
                     key={kb.id}
                     className={cn(
                       'p-3 rounded-md cursor-pointer hover:bg-muted transition-colors',
-                      selectedKnowledgeBase === kb.id ? 'bg-muted' : '',
+                      selectedKnowledgeBase?.id === kb.id ? 'bg-muted' : '',
                       'flex justify-between',
                     )}
-                    onClick={() => handleSelectKnowledgeBase(kb.id)}
+                    onClick={() => handleSelectKnowledgeBase(kb)}
                   >
                     <div>
                       <div className="font-medium">{kb.name}</div>{' '}
@@ -249,53 +243,10 @@ export function KnowledgeBaseConfig() {
 
       {/* 右侧：文件上传区域 */}
       <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {selectedKnowledgeBase
-                ? `${knowledgeBases?.find((kb) => kb.id === selectedKnowledgeBase)?.name} - 文件管理`
-                : '请先选择知识库'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedKnowledgeBase ? (
-              <div className="space-y-6">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-muted-foreground/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <div className="text-muted-foreground">
-                      拖拽文件到此处或点击下方按钮上传
-                    </div>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      multiple
-                      className="hidden"
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor="file-upload">
-                      <Button variant="outline">选择文件</Button>
-                    </label>
-                    <div className="text-xs text-muted-foreground">
-                      支持 PDF、Word、TXT 等文档格式
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium mb-2">已上传文件</h3>
-                  <Separator className="mb-4" />
-                  <div className="text-sm text-muted-foreground text-center py-8">
-                    暂无文件
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                请先从左侧选择一个知识库
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <UploadArea
+          selectedKnowledgeBase={selectedKnowledgeBase}
+          onFileUpload={handleFileUpload}
+        />
       </div>
     </div>
   );
