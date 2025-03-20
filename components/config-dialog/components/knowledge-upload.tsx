@@ -7,9 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import type { KnowledgeBase, KnowledgeDocument } from '@/lib/db/schema';
 import { message, Upload, type UploadProps } from 'antd';
 import { useEffect, useState } from 'react';
-import { AsyncButton } from '@/components/AsyncButton';
 import { confirm } from '@/components/confirm';
-import dayjs from 'dayjs';
 import { DocumentListItem } from './document-list-item';
 
 type UploadAreaProps = {

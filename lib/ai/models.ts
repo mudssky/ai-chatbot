@@ -1,3 +1,5 @@
+import { OllamaEmbeddings } from '@langchain/ollama';
+
 export const DEFAULT_CHAT_MODEL: string = 'deepseek-chat';
 
 interface ChatModel {
@@ -23,3 +25,8 @@ export const chatModels: Array<ChatModel> = [
   //   description: 'Uses advanced reasoning',
   // },
 ];
+
+export const embeddingModel = new OllamaEmbeddings({
+  model: 'bge-m3',
+  baseUrl: 'http://localhost:11434', // Default value
+});
