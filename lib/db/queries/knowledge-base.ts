@@ -71,3 +71,30 @@ export async function addKnowledgeDocument(
     throw error;
   }
 }
+
+// 添加文档查询方法
+export const getKnowledgeDocuments = async (knowledgeBaseId: string) => {
+  return await db
+    .select()
+    .from(knowledgeDocument)
+    .where(eq(knowledgeDocument.knowledgeBaseId, knowledgeBaseId))
+    .orderBy(knowledgeDocument.createdAt);
+};
+
+// 删除知识库文档
+export async function deleteKnowledgeDocument({
+  id,
+}: {
+  id: string;
+}) {
+  try {
+    const res = await db
+      .delete(knowledgeDocument)
+      .where(eq(knowledgeDocument.id, id))
+      .returning();
+    return res;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

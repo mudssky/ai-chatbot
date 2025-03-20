@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
-import { uploadFile } from '@/lib/upload/minio';
+import { deleteFile, uploadFile } from '@/lib/upload/minio';
 import { withAuth } from '@/lib/auth/with-auth';
-import { addKnowledgeDocument } from '@/lib/db/queries/knowledge-base';
+import {
+  addKnowledgeDocument,
+  deleteKnowledgeDocument,
+  getKnowledgeDocuments,
+} from '@/lib/db/queries/knowledge-base';
 const BUCKET_NAME = process.env.MINIO_PROJECT_BUCKET ?? '';
 export const POST = withAuth(async ({ request, userId }) => {
   try {
@@ -44,5 +48,48 @@ export const POST = withAuth(async ({ request, userId }) => {
       { error: '文件上传失败，请稍后重试' },
       { status: 500 },
     );
+  }
+});
+
+// 获取当前知识库文档列表
+export const GET = withAuth(async ({ request, userId }) => {
+  try {
+    const { searchParams } = new URL(request?.url ?? '');
+    const knowledgeBaseId = searchParams.get('knowledgeBaseId');
+
+    if (!knowledgeBaseId) {
+      return NextResponse.json({ error: '缺少知识库ID参数' }, { status: 400 });
+    }
+    const documents = await getKnowledgeDocuments(knowledgeBaseId);
+    return documents;
+  } catch (error) {
+    console.error('[KNOWLEDGE_GET_DOCUMENTS_ERROR]', error);
+    return error;
+  }
+});
+
+// 删除接口
+export const DELETE = withAuth(async ({ request, userId }) => {
+  try {
+    const { searchParams } = new URL(request?.url ?? '');
+    const documentId = searchParams.get('documentId');
+
+    if (!documentId) {
+      return NextResponse.json({ error: '缺少文档ID参数' }, { status: 400 });
+    }
+
+    // 删除数据库中的文档记录
+    const res = await deleteKnowledgeDocument({ id: documentId });
+    if (!res) {
+      return NextResponse.json({ error: '文档不存在' }, { status: 404 });
+    }
+
+    // 删除MinIO中的文件
+    await deleteFile(BUCKET_NAME, res[0].filePath);
+
+    return true;
+  } catch (error) {
+    console.error('[KNOWLEDGE_DELETE_ERROR]', error);
+    return error;
   }
 });

@@ -153,6 +153,7 @@ export const knowledgeDocument = pgTable('KnowledgeDocument', {
     .notNull()
     .default('minio'),
 });
+export type KnowledgeDocument = InferSelectModel<typeof knowledgeDocument>;
 
 export const knowledgeChunk = pgTable(
   'KnowledgeChunk',
@@ -174,4 +175,4 @@ export const knowledgeChunk = pgTable(
   (table) => [index('chunk_hash_idx').on(table.chunkHash)],
 );
 
-export type KnowledgeDocument = InferSelectModel<typeof knowledgeDocument>;
+export type KnowledgeChunk = InferSelectModel<typeof knowledgeChunk>;

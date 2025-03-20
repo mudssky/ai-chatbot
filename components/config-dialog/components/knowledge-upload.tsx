@@ -4,8 +4,14 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { KnowledgeBase } from '@/lib/db/schema';
+import type { KnowledgeBase, KnowledgeDocument } from '@/lib/db/schema';
 import { message, Upload, type UploadProps } from 'antd';
+import { useEffect, useState } from 'react';
+import { AsyncButton } from '@/components/AsyncButton';
+import { confirm } from '@/components/confirm';
+import dayjs from 'dayjs';
+import { DocumentListItem } from './document-list-item';
+
 type UploadAreaProps = {
   selectedKnowledgeBase: KnowledgeBase | null;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -15,10 +21,54 @@ export function UploadArea({
   selectedKnowledgeBase,
   onFileUpload,
 }: UploadAreaProps) {
+  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchDocuments = async () => {
+    if (!selectedKnowledgeBase?.id) return;
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/api/knowledge-base/document?knowledgeBaseId=${selectedKnowledgeBase.id}`,
+      );
+      if (!response.ok) throw new Error('获取文档列表失败');
+      const data = await response.json();
+      setDocuments(data.data || []);
+    } catch (error) {
+      console.error('获取文档列表失败:', error);
+      message.error('获取文档列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [selectedKnowledgeBase?.id]);
+
+  const handleDelete = async (document: KnowledgeDocument) => {
+    await confirm({
+      title: `确定要删除文件 ${document.fileName} 吗？`,
+      async onOk() {
+        try {
+          const response = await fetch(
+            `/api/knowledge-base/document?documentId=${document.id}`,
+            { method: 'DELETE' },
+          );
+          if (!response.ok) throw new Error('删除失败');
+          message.success('删除成功');
+          await fetchDocuments();
+        } catch (error) {
+          console.error('删除文件失败:', error);
+          message.error('删除文件失败');
+        }
+      },
+    });
+  };
   const props: UploadProps = {
     name: 'file',
     multiple: true,
-    showUploadList: false,
+    showUploadList: true,
     async beforeUpload(file, fileList) {
       const formData = new FormData();
       formData.append('file', file);
@@ -31,7 +81,8 @@ export function UploadArea({
         });
 
         if (!response.ok) throw new Error(await response.text());
-
+        message.success('文件上传成功');
+        await fetchDocuments();
         return false;
       } catch (error) {
         message.error(`文件上传失败: ${(error as any).message}`);
@@ -71,9 +122,25 @@ export function UploadArea({
             <div>
               <h3 className="text-sm font-medium mb-2">已上传文件</h3>
               <Separator className="mb-4" />
-              <div className="text-sm text-muted-foreground text-center py-8">
-                暂无文件
-              </div>
+              {loading ? (
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  加载中...
+                </div>
+              ) : documents.length > 0 ? (
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {documents.map((doc) => (
+                    <DocumentListItem
+                      key={doc.id}
+                      document={doc}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  暂无文件
+                </div>
+              )}
             </div>
           </div>
         ) : (

@@ -53,6 +53,18 @@ export async function uploadFile(bucketName: string, file: File) {
   }
 }
 
+// 删除文件函数
+export async function deleteFile(bucketName: string, filePath: string) {
+  try {
+    const objectName = filePath.replace(`${bucketName}/`, '');
+    await minioClient.removeObject(bucketName, objectName);
+    return true;
+  } catch (error) {
+    console.error('MinIO delete failed:', error);
+    throw new Error(`文件删除失败: ${(error as Error).message}`);
+  }
+}
+
 // 初始化时检查连接（开发环境）
 if (process.env.NODE_ENV !== 'production') {
   checkMinioConnection().catch(console.error);
