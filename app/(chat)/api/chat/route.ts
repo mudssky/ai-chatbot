@@ -77,8 +77,9 @@ export async function POST(request: Request) {
           system: systemPrompt({ selectedChatModel }),
           messages,
           maxSteps: 5,
+          // 推理模型deepseek-r1不支持functional calling
           experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
+            selectedChatModel === 'deepseek-reasoner'
               ? []
               : [
                   'getWeather',
