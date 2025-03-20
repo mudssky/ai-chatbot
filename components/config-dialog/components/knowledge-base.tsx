@@ -139,7 +139,7 @@ export function KnowledgeBaseConfig() {
             <CardTitle>知识库列表</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 max-h-[500px] overflow-auto">
+            <div className="space-y-4 max-h-[360px] overflow-auto">
               {knowledgeBases?.length > 0 ? (
                 knowledgeBases.map((kb) => (
                   // biome-ignore lint/nursery/noStaticElementInteractions: <explanation>
