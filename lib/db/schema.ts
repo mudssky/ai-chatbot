@@ -145,8 +145,13 @@ export const knowledgeDocument = pgTable('KnowledgeDocument', {
   chunkCount: integer('chunkCount').default(0),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  processingStatus: varchar('processingStatus', {
+    enum: ['pending', 'processing', 'completed', 'failed'],
+  })
+    .notNull()
+    .default('pending'),
   // 新增存储信息字段
-  storageType: varchar('storage_type', {
+  storageType: varchar('storageType', {
     length: 20,
     enum: ['minio', 'oss', 's3', 'local'],
   })
@@ -165,11 +170,11 @@ export const knowledgeChunk = pgTable(
     content: text('content').notNull(),
     metadata: json('metadata').notNull(),
     vector: vector('embedding', { dimensions: 1024 }).notNull(),
-    chunkHash: text('chunk_hash'),
+    chunkHash: text('chunkHash'),
     createdAt: timestamp('createdAt').notNull(),
     updatedAt: timestamp('updatedAt').notNull(),
-    isProcessed: boolean('is_processed'), // 是否完成向量化
-    processingError: text('processing_error'), // 处理异常信息
+    isProcessed: boolean('isProcessed'), // 是否完成向量化
+    processingError: text('processingError'), // 处理异常信息
   },
   // 创建索引
   (table) => [index('chunk_hash_idx').on(table.chunkHash)],

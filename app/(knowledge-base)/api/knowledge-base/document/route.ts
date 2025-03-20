@@ -39,6 +39,7 @@ export const POST = withAuth(async ({ request, userId }) => {
       chunkCount: null,
       storageType: 'minio',
       fileExt: res.fileExt,
+      processingStatus: 'pending',
     });
 
     return addRes;
