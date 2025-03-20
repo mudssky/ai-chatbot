@@ -1,0 +1,2 @@
+// 批量处理向量化
+export const DOCUMENT_EMBEDING_QUEUE = 'DOCUMENT_EMBEDING_QUEUE';

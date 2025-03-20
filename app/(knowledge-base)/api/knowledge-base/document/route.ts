@@ -3,10 +3,22 @@ import { deleteFile, uploadFile } from '@/lib/upload/minio';
 import { withAuth } from '@/lib/auth/with-auth';
 import {
   addKnowledgeDocument,
+  type AddKnowledgeDocumentParam,
   deleteKnowledgeDocument,
   getKnowledgeDocuments,
+  updateKnowledgeDocument,
+  type UpdateKnowledgeDocumentParam,
 } from '@/lib/db/queries/knowledge-base';
+import { documentQueue } from '@/lib/queue/document.queue';
+import { generateChunks, SplitParam } from '@/lib/ai/rag';
+import { DOCUMENT_EMBEDING_QUEUE } from '@/lib/config';
+import { knowledgeChunk } from '@/lib/db/schema';
+import { db } from '@/lib/db/queries';
+
 const BUCKET_NAME = process.env.MINIO_PROJECT_BUCKET ?? '';
+/**
+ * 上传知识库文档
+ */
 export const POST = withAuth(async ({ request, userId }) => {
   try {
     const formData = await request?.formData();
@@ -28,18 +40,51 @@ export const POST = withAuth(async ({ request, userId }) => {
     }
 
     const res = await uploadFile(BUCKET_NAME, file);
-    const addRes = await addKnowledgeDocument({
+    const data = {
       knowledgeBaseId,
       fileName: file.name,
       filePath: res.filePtah,
       fileType: res.fileType,
       fileSize: res.fileSize,
-      chunkSize: null,
-      chunkOverlap: null,
+      chunkSize: SplitParam.chunkSize,
+      chunkOverlap: SplitParam.chunkOverlap,
       chunkCount: null,
       storageType: 'minio',
       fileExt: res.fileExt,
       processingStatus: 'pending',
+    } satisfies AddKnowledgeDocumentParam;
+    const addRes = await addKnowledgeDocument(data);
+    // 切片和前端无关，所以异步处理，这里直接返回
+    setTimeout(async () => {
+      const chunks = await generateChunks(file, {
+        extName: res.fileExt ?? '',
+      });
+
+      // 创建分片数据对象
+      const chunkRecords = chunks.map((chunk, index) => ({
+        documentId: addRes[0].id,
+        content: chunk,
+        chunkIndex: index,
+        vector: null,
+        createdAt: new Date(),
+      }));
+      await updateKnowledgeDocument({
+        id: knowledgeBaseId,
+        updates: {
+          chunkCount: chunks.length,
+          processingStatus: 'processing',
+        } satisfies UpdateKnowledgeDocumentParam,
+      });
+      // 存储分片到数据库
+      const inertResult = await db
+        .insert(knowledgeChunk)
+        .values(chunkRecords)
+        .returning();
+
+      for (const chunk of inertResult) {
+        // 提交队列处理任务
+        await documentQueue.add(DOCUMENT_EMBEDING_QUEUE, chunk);
+      }
     });
 
     return addRes;

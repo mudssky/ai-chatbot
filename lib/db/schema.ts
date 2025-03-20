@@ -167,17 +167,21 @@ export const knowledgeChunk = pgTable(
     documentId: uuid('documentId')
       .notNull()
       .references(() => knowledgeDocument.id),
+    chunkIndex: integer('chunkIndex').notNull(),
     content: text('content').notNull(),
-    metadata: json('metadata').notNull(),
-    vector: vector('embedding', { dimensions: 1024 }).notNull(),
+    metadata: json('metadata'),
+    vector: vector('embedding', { dimensions: 1024 }),
     chunkHash: text('chunkHash'),
-    createdAt: timestamp('createdAt').notNull(),
-    updatedAt: timestamp('updatedAt').notNull(),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt').notNull().defaultNow(),
     isProcessed: boolean('isProcessed'), // 是否完成向量化
     processingError: text('processingError'), // 处理异常信息
   },
   // 创建索引
-  (table) => [index('chunk_hash_idx').on(table.chunkHash)],
+  (table) => [
+    index('chunk_order_idx').on(table.documentId, table.chunkIndex),
+    index('chunk_hash_idx').on(table.chunkHash),
+  ],
 );
 
 export type KnowledgeChunk = InferSelectModel<typeof knowledgeChunk>;

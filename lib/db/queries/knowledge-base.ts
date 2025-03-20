@@ -59,10 +59,11 @@ export async function deleteKnowledgeBase({
     throw error;
   }
 }
-
-export async function addKnowledgeDocument(
-  doc: Omit<KnowledgeDocument, 'id' | 'createdAt' | 'updatedAt'>,
-) {
+export type AddKnowledgeDocumentParam = Omit<
+  KnowledgeDocument,
+  'id' | 'createdAt' | 'updatedAt'
+>;
+export async function addKnowledgeDocument(doc: AddKnowledgeDocumentParam) {
   try {
     const res = await db.insert(knowledgeDocument).values(doc).returning();
     return res;
@@ -90,6 +91,33 @@ export async function deleteKnowledgeDocument({
   try {
     const res = await db
       .delete(knowledgeDocument)
+      .where(eq(knowledgeDocument.id, id))
+      .returning();
+    return res;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export type UpdateKnowledgeDocumentParam = Partial<
+  Pick<KnowledgeDocument, 'chunkCount' | 'processingStatus'>
+>;
+
+export async function updateKnowledgeDocument({
+  id,
+  updates,
+}: {
+  id: string;
+  updates: UpdateKnowledgeDocumentParam;
+}) {
+  try {
+    const res = await db
+      .update(knowledgeDocument)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
       .where(eq(knowledgeDocument.id, id))
       .returning();
     return res;

@@ -5,12 +5,22 @@ export const SplitParam = {
   chunkSize: 500,
   chunkOverlap: 50,
 };
-export const generateChunks = async (input: string) => {
+export const generateChunks = async (
+  file: File,
+  options?: {
+    extName: string;
+  },
+) => {
+  const input = await file.text();
   const splitter = new RecursiveCharacterTextSplitter(SplitParam);
   const splitDocs = await splitter.splitText(input);
   return splitDocs;
 };
-
+const generateChunksFromText = async (input: string) => {
+  const splitter = new RecursiveCharacterTextSplitter(SplitParam);
+  const splitDocs = await splitter.splitText(input);
+  return splitDocs;
+};
 async function generateEmbedding(value: string) {
   const e = await embeddingModel.embedQuery(value);
   return e;
@@ -19,7 +29,7 @@ async function generateEmbedding(value: string) {
 export const generateEmbeddings = async (
   value: string,
 ): Promise<Array<{ embedding: number[]; content: string }>> => {
-  const chunks = await generateChunks(value);
+  const chunks = await generateChunksFromText(value);
   const res: { embedding: number[]; content: string }[] = [];
   for (const chunk of chunks) {
     const e = await generateEmbedding(chunk);
