@@ -2,7 +2,7 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { embeddingModel } from '../models';
 
 export const SplitParam = {
-  chunkSize: 300,
+  chunkSize: 500,
   chunkOverlap: 50,
 };
 export const generateChunks = async (input: string) => {
