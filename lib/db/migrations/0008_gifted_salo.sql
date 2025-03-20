@@ -1,0 +1,2 @@
+ALTER TABLE "KnowledgeDocument" ALTER COLUMN "fileSize" TYPE integer USING ("fileSize"::integer);--> statement-breakpoint
+ALTER TABLE "KnowledgeDocument" ADD COLUMN "storage_type" varchar(20) DEFAULT 'minio' NOT NULL;

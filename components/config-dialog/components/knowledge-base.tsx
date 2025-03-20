@@ -69,7 +69,7 @@ export function KnowledgeBaseConfig() {
       const response = await fetch('/api/knowledge-base');
       if (!response.ok) throw new Error('获取失败');
       const data = await response.json();
-      setKnowledgeBases(data);
+      setKnowledgeBases(data.data);
     } catch (error) {
       toast.error('获取知识库列表失败');
     }
@@ -94,7 +94,7 @@ export function KnowledgeBaseConfig() {
       if (!response.ok) throw new Error('添加失败');
 
       const newEntry = await response.json();
-      setKnowledgeBases((prev) => [...prev, ...newEntry]);
+      setKnowledgeBases((prev) => [...prev, ...newEntry.data]);
       form.reset();
       setSelectedKnowledgeBase(newEntry?.[0]);
       toast.success('知识库添加成功');

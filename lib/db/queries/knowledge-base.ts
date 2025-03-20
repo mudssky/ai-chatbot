@@ -1,5 +1,10 @@
 import { db } from '../queries';
-import { type KnowledgeBase, knowledgeBase } from '../schema';
+import {
+  type KnowledgeBase,
+  knowledgeBase,
+  knowledgeDocument,
+  type KnowledgeDocument,
+} from '../schema';
 import { eq } from 'drizzle-orm';
 
 export async function getKnowledgeBase({
@@ -48,6 +53,18 @@ export async function deleteKnowledgeBase({
 }) {
   try {
     const res = await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
+    return res;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function addKnowledgeDocument(
+  doc: Omit<KnowledgeDocument, 'id' | 'createdAt' | 'updatedAt'>,
+) {
+  try {
+    const res = await db.insert(knowledgeDocument).values(doc).returning();
     return res;
   } catch (error) {
     console.log(error);

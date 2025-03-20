@@ -8,7 +8,7 @@ import { withAuth } from '@/lib/auth/with-auth';
 
 export const GET = withAuth(async ({ userId }) => {
   const knows = await getKnowledgeBase({ userId });
-  return NextResponse.json(knows);
+  return knows;
 });
 
 export const POST = withAuth(async ({ request, userId }) => {
@@ -28,7 +28,7 @@ export const POST = withAuth(async ({ request, userId }) => {
       description,
     });
 
-    return NextResponse.json(newEntry, { status: 201 });
+    return newEntry;
   } catch (error) {
     console.error('添加知识库失败:', error);
     return NextResponse.json(

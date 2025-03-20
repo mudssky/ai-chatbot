@@ -11,6 +11,7 @@ import {
   boolean,
   integer,
   vector,
+  index,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -136,24 +137,41 @@ export const knowledgeDocument = pgTable('KnowledgeDocument', {
     .references(() => knowledgeBase.id),
   fileName: text('fileName').notNull(),
   filePath: text('filePath').notNull(),
-  fileType: varchar('fileType', { length: 32 }).notNull(),
-  fileSize: varchar('fileSize', { length: 32 }).notNull(),
-  chunkSize: integer('chunkSize').notNull().default(1000),
-  chunkOverlap: integer('chunkOverlap').notNull().default(200),
-  createdAt: timestamp('createdAt').notNull(),
-  updatedAt: timestamp('updatedAt').notNull(),
+  fileType: varchar('fileType', { length: 32 }).notNull(), //存储MIME类型
+  fileExt: varchar('fileExt', { length: 10 }), // 新增扩展名字段（可选）
+  fileSize: integer('fileSize').notNull(),
+  chunkSize: integer('chunkSize').default(0),
+  chunkOverlap: integer('chunkOverlap').default(0),
+  chunkCount: integer('chunkCount').default(0),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  // 新增存储信息字段
+  storageType: varchar('storage_type', {
+    length: 20,
+    enum: ['minio', 'oss', 's3', 'local'],
+  })
+    .notNull()
+    .default('minio'),
 });
 
-export const knowledgeChunk = pgTable('KnowledgeChunk', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  documentId: uuid('documentId')
-    .notNull()
-    .references(() => knowledgeDocument.id),
-  content: text('content').notNull(),
-  metadata: json('metadata').notNull(),
-  vector: vector('embedding', { dimensions: 1024 }).notNull(),
-  createdAt: timestamp('createdAt').notNull(),
-  updatedAt: timestamp('updatedAt').notNull(),
-});
+export const knowledgeChunk = pgTable(
+  'KnowledgeChunk',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    documentId: uuid('documentId')
+      .notNull()
+      .references(() => knowledgeDocument.id),
+    content: text('content').notNull(),
+    metadata: json('metadata').notNull(),
+    vector: vector('embedding', { dimensions: 1024 }).notNull(),
+    chunkHash: text('chunk_hash'),
+    createdAt: timestamp('createdAt').notNull(),
+    updatedAt: timestamp('updatedAt').notNull(),
+    isProcessed: boolean('is_processed'), // 是否完成向量化
+    processingError: text('processing_error'), // 处理异常信息
+  },
+  // 创建索引
+  (table) => [index('chunk_hash_idx').on(table.chunkHash)],
+);
 
 export type KnowledgeDocument = InferSelectModel<typeof knowledgeDocument>;
