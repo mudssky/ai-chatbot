@@ -13,10 +13,10 @@ const envSchema = z.object({
   MINIO_ACCESS_KEY: z.string().min(1),
   MINIO_SECRET_KEY: z.string().min(1),
   MINIO_PROJECT_BUCKET: z.string().min(1),
-  MINIO_USE_SSL: z.string().transform((val) => val === 'true'),
+  // MINIO_USE_SSL: z.string().transform((val) => val === 'true'),
 
   // AI服务配置
-  OPENAI_API_KEY: z.string().min(1),
+  // OPENAI_API_KEY: z.string().min(1),
   DEEPSEEK_API_KEY: z.string().min(1),
 
   // 应用配置
