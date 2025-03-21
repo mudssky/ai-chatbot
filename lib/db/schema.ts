@@ -174,7 +174,7 @@ export const knowledgeChunk = pgTable(
     chunkHash: text('chunkHash'),
     createdAt: timestamp('createdAt').notNull().defaultNow(),
     updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-    isProcessed: boolean('isProcessed'), // 是否完成向量化
+    isProcessed: boolean('isProcessed').default(false), // 是否完成向量化
     processingError: text('processingError'), // 处理异常信息
   },
   // 创建索引
