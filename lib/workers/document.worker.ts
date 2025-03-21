@@ -1,40 +1,68 @@
 import { Worker } from 'bullmq';
 import { DOCUMENT_EMBEDING_QUEUE } from '../config/queue';
 import type { DocumentJobData } from '@/lib/queue';
-import { generateEmbeddings } from '../ai/rag';
-import { updateKnowledgeDocument } from '../db/queries/knowledge-base';
+import { generateChunkHash, generateEmbedding } from '../ai/rag';
+import {
+  updateKnowledgeChunk,
+  updateKnowledgeDocument,
+} from '@/lib/db/queries/knowledge-base';
 import { redisClient } from '../config';
+import { logger } from '@/lib/logger';
+import { db } from '../db/queries';
+import { knowledgeBase, knowledgeChunk, knowledgeDocument } from '../db/schema';
+import { eq, and, sql, count } from 'drizzle-orm';
 
 const worker = new Worker<DocumentJobData>(
   DOCUMENT_EMBEDING_QUEUE,
   async (job) => {
     try {
-      console.log({ job });
-
-      //   const { documentId, filePath, fileType } = job.data;
-
-      // 从MinIO获取文件内容
-      //   const content = await getFileContent(
-      //     process.env.MINIO_PROJECT_BUCKET!,
-      //     filePath,
-      //   );
-
+      logger.info({
+        message: '正在处理任务:',
+        job,
+      });
       // 生成文本切片和向量
-      const embeddings = await generateEmbeddings(job.data.content);
-      // TODO
-      //   更新数据库记录
-      //     await updateKnowledgeDocument({
-      //       id: documentId,
-      //       chunkCount: embeddings.length,
-      //       processingStatus: 'completed',
-      //       updatedAt: new Date(),
-      //     });
+      const embedding = await generateEmbedding(job.data.content);
 
-      return { success: true, chunks: embeddings.length };
-    } catch (error) {
+      const chunkHash = await generateChunkHash(job.data.content);
+      await updateKnowledgeChunk({
+        id: job.data.id,
+        updates: {
+          vector: embedding,
+          isProcessed: true,
+          chunkHash,
+        },
+      });
+
+      //   判断分片是否执行完
+      const toDoCount = await db
+        .select({
+          count: count(),
+        })
+        .from(knowledgeChunk)
+        .where(
+          and(
+            eq(knowledgeChunk.documentId, job.data.documentId),
+            eq(knowledgeChunk.isProcessed, false),
+          ),
+        );
+      // 处理完
+      if ((toDoCount?.[0]?.count ?? 0) < 1) {
+        await updateKnowledgeDocument({
+          id: job.data.documentId,
+          updates: { processingStatus: 'completed' },
+        });
+      }
+    } catch (error: any) {
       await updateKnowledgeDocument({
         id: job.data.documentId,
         updates: { processingStatus: 'failed' },
+      });
+      await updateKnowledgeChunk({
+        id: job.data.id,
+        updates: {
+          isProcessed: false,
+          processingError: error.message,
+        },
       });
       throw error;
     }
@@ -48,9 +76,9 @@ const worker = new Worker<DocumentJobData>(
 );
 
 worker.on('completed', (job) => {
-  console.log(`Document processed: ${job.id}`, job.returnvalue);
+  logger.info(`Document processed: ${job.id}`, job.returnvalue);
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`Document process failed: ${job?.id}`, err);
+  logger.warning(`Document process failed: ${job?.id}`, err);
 });

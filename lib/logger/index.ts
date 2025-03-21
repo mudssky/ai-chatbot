@@ -1,6 +1,6 @@
 import { env } from '@/lib/config';
 
-const winston = require('winston');
+import * as winston from 'winston';
 
 export const logger = winston.createLogger({
   level: env.LOG_LEVEL,

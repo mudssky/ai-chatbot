@@ -2,6 +2,8 @@ import { db } from '../queries';
 import {
   type KnowledgeBase,
   knowledgeBase,
+  type KnowledgeChunk,
+  knowledgeChunk,
   knowledgeDocument,
   type KnowledgeDocument,
 } from '../schema';
@@ -124,5 +126,60 @@ export async function updateKnowledgeDocument({
   } catch (error) {
     console.log(error);
     throw error;
+  }
+}
+
+// 更新切片
+export type UpdateKnowledgeChunkParam = Partial<KnowledgeChunk>;
+
+export async function updateKnowledgeChunk({
+  id,
+  updates,
+}: {
+  id: string;
+  updates: UpdateKnowledgeChunkParam;
+}) {
+  try {
+    const res = await db
+      .update(knowledgeChunk)
+      .set({
+        ...updates,
+        updatedAt: new Date(), // 自动更新修改时间
+      })
+      .where(eq(knowledgeChunk.id, id))
+      .returning();
+    return res;
+  } catch (error) {
+    console.error('[UPDATE_CHUNK_ERROR]', error);
+    throw new Error('更新分块失败');
+  }
+}
+
+// 批量更新方法
+export async function batchUpdateKnowledgeChunks(
+  updates: Array<{
+    id: string;
+    data: UpdateKnowledgeChunkParam;
+  }>,
+) {
+  try {
+    return await db.transaction(async (tx) => {
+      const results = [];
+      for (const { id, data } of updates) {
+        const res = await tx
+          .update(knowledgeChunk)
+          .set({
+            ...data,
+            updatedAt: new Date(),
+          })
+          .where(eq(knowledgeChunk.id, id))
+          .returning();
+        results.push(res[0]);
+      }
+      return results;
+    });
+  } catch (error) {
+    console.error('[BATCH_UPDATE_CHUNKS_ERROR]', error);
+    throw new Error('批量更新分块失败');
   }
 }
