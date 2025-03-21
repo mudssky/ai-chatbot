@@ -41,7 +41,7 @@ const worker = new Worker<DocumentJobData>(
   },
   {
     connection: redisClient,
-    concurrency: 3,
+    concurrency: 1,
     removeOnComplete: { count: 100 },
     removeOnFail: { count: 1000 },
   },
