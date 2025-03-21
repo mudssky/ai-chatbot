@@ -4,6 +4,8 @@ import * as React from 'react';
 import { AsyncButton } from '@/components/AsyncButton';
 import dayjs from 'dayjs';
 import type { KnowledgeDocument } from '@/lib/db/schema';
+import { Space } from 'antd';
+import { ProgressIcon } from './progress-icon';
 
 type DocumentListItemProps = {
   document: KnowledgeDocument;
@@ -23,16 +25,21 @@ export function DocumentListItem({
         <div className="text-sm font-medium">{document.fileName}</div>
         <div className="text-xs text-muted-foreground">
           上传时间: {dayjs(document.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+          <span className="mx-2">•</span>
+          分片数: {document.chunkCount}
         </div>
       </div>
-      <AsyncButton
-        variant="ghost"
-        size="sm"
-        className="text-destructive hover:text-destructive/80"
-        onClick={() => onDelete(document)}
-      >
-        删除
-      </AsyncButton>
+      <Space>
+        <ProgressIcon status={'failed'} />
+        <AsyncButton
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive/80"
+          onClick={() => onDelete(document)}
+        >
+          删除
+        </AsyncButton>{' '}
+      </Space>
     </div>
   );
 }

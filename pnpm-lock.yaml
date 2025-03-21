@@ -47,6 +47,9 @@ importers:
       '@langchain/ollama':
         specifier: ^0.2.0
         version: 0.2.0(@langchain/core@0.3.42(openai@4.88.0(ws@8.18.0(bufferutil@4.0.8))(zod@3.23.8)))
+      '@mudssky/jsutils':
+        specifier: ^1.10.0
+        version: 1.10.0
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.6
         version: 1.1.6(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1245,6 +1248,9 @@ packages:
     resolution: {integrity: sha512-x0fWaQtYp4E6sktbsdAqnehxDgEc/VwM7uLsRCYWaiGu0ykYdZPiS8zCWdnjHwyiumousxfBm4SO31eXqwEZhQ==}
     cpu: [x64]
     os: [win32]
+
+  '@mudssky/jsutils@1.10.0':
+    resolution: {integrity: sha512-7ihA2IePYdu5m2SlhljHQjCKDLd6QkasSUaXAud0zL6En89t7F/pB+PEbdD9E3Zgge5cxPUOhOOu05eph8WSTw==}
 
   '@neondatabase/serverless@0.9.5':
     resolution: {integrity: sha512-siFas6gItqv6wD/pZnvdu34wEqgG3nSE6zWZdq5j2DEsa+VvX8i/5HXJOo06qrw5axPXn+lGCxeR+NLaSPIXug==}
@@ -5682,6 +5688,8 @@ snapshots:
 
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
     optional: true
+
+  '@mudssky/jsutils@1.10.0': {}
 
   '@neondatabase/serverless@0.9.5':
     dependencies:
