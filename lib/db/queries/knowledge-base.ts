@@ -91,6 +91,8 @@ export async function deleteKnowledgeDocument({
   id: string;
 }) {
   try {
+    // 先删除文档相关的所有分片记录
+    await db.delete(knowledgeChunk).where(eq(knowledgeChunk.documentId, id));
     const res = await db
       .delete(knowledgeDocument)
       .where(eq(knowledgeDocument.id, id))

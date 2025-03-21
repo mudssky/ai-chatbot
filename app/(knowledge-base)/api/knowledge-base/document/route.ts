@@ -14,6 +14,7 @@ import { generateChunks, SplitParam } from '@/lib/ai/rag';
 import { DOCUMENT_EMBEDDING_QUEUE } from '@/lib/config';
 import { knowledgeChunk } from '@/lib/db/schema';
 import { db } from '@/lib/db/queries';
+import { eq, and, ne } from 'drizzle-orm';
 
 const BUCKET_NAME = process.env.MINIO_PROJECT_BUCKET ?? '';
 /**
@@ -124,6 +125,32 @@ export const DELETE = withAuth(async ({ request, userId }) => {
       return NextResponse.json({ error: '缺少文档ID参数' }, { status: 400 });
     }
 
+    // 需要先移除队列中相关的任务
+    // 1. 暂停队列
+    await documentQueue.pause();
+    // 2. 查询未处理完的分块
+    const unProcessedChunk = await db
+      .select({
+        id: knowledgeChunk.id,
+      })
+      .from(knowledgeChunk)
+      .where(
+        and(
+          eq(knowledgeChunk.documentId, documentId),
+          ne(knowledgeChunk.isProcessed, true),
+        ),
+      )
+      .then((res) => res.map((item) => item.id));
+    // 3.查询未执行的任务
+    const jobs = await documentQueue.getJobs(['waiting', 'active', 'delayed']);
+    // 4. 遍历任务列表，移除与当前分片相关的任务
+    for (const job of jobs) {
+      // 检查任务数据是否与当前分片相关
+      if (unProcessedChunk.includes(job.data.id)) {
+        await job.remove();
+      }
+    }
+
     // 删除数据库中的文档记录
     const res = await deleteKnowledgeDocument({ id: documentId });
     if (!res) {
@@ -136,6 +163,13 @@ export const DELETE = withAuth(async ({ request, userId }) => {
     return true;
   } catch (error) {
     console.error('[KNOWLEDGE_DELETE_ERROR]', error);
+
     return error;
+  } finally {
+    // 判断队列是否停止状态
+    const isPaused = await documentQueue.isPaused();
+    if (isPaused) {
+      documentQueue.resume();
+    }
   }
 });
