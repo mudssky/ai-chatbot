@@ -5,7 +5,7 @@ const winston = require('winston');
 export const logger = winston.createLogger({
   level: env.LOG_LEVEL,
   format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
+  //   defaultMeta: { service: 'user-service' },
   transports: [
     //
     // - Write all logs with importance level of `error` or higher to `error.log`
