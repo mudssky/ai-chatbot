@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import './globals.css';
 import '@ant-design/v5-patch-for-react-19';
-
+import '@/lib/workers/index';
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
   title: 'Next.js Chatbot Template',

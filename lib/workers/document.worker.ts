@@ -1,19 +1,18 @@
 import { Worker } from 'bullmq';
-import { DOCUMENT_EMBEDING_QUEUE } from '../config/queue';
+import { DOCUMENT_EMBEDDING_QUEUE, redisClient } from '@/lib/config';
 import type { DocumentJobData } from '@/lib/queue';
 import { generateChunkHash, generateEmbedding } from '../ai/rag';
 import {
   updateKnowledgeChunk,
   updateKnowledgeDocument,
 } from '@/lib/db/queries/knowledge-base';
-import { redisClient } from '../config';
 import { logger } from '@/lib/logger';
 import { db } from '../db/queries';
-import { knowledgeBase, knowledgeChunk, knowledgeDocument } from '../db/schema';
-import { eq, and, sql, count } from 'drizzle-orm';
+import { knowledgeChunk } from '../db/schema';
+import { eq, and, count } from 'drizzle-orm';
 
-const worker = new Worker<DocumentJobData>(
-  DOCUMENT_EMBEDING_QUEUE,
+export const worker = new Worker<DocumentJobData>(
+  DOCUMENT_EMBEDDING_QUEUE,
   async (job) => {
     try {
       logger.info({
@@ -69,16 +68,24 @@ const worker = new Worker<DocumentJobData>(
   },
   {
     connection: redisClient,
-    concurrency: 1,
+    concurrency: 2,
     removeOnComplete: { count: 100 },
     removeOnFail: { count: 1000 },
   },
 );
-
 worker.on('completed', (job) => {
   logger.info(`Document processed: ${job.id}`, job.returnvalue);
 });
 
 worker.on('failed', (job, err) => {
   logger.warning(`Document process failed: ${job?.id}`, err);
+});
+
+// 添加以下事件监听器
+worker.on('error', (err) => {
+  logger.error({ message: 'Worker error', error: err });
+});
+
+worker.on('active', (job) => {
+  logger.info(`Processing job ${job.id}`);
 });

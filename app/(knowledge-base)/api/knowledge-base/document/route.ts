@@ -11,7 +11,7 @@ import {
 } from '@/lib/db/queries/knowledge-base';
 import { documentQueue } from '@/lib/queue/document.queue';
 import { generateChunks, SplitParam } from '@/lib/ai/rag';
-import { DOCUMENT_EMBEDING_QUEUE } from '@/lib/config';
+import { DOCUMENT_EMBEDDING_QUEUE } from '@/lib/config';
 import { knowledgeChunk } from '@/lib/db/schema';
 import { db } from '@/lib/db/queries';
 
@@ -83,7 +83,7 @@ export const POST = withAuth(async ({ request, userId }) => {
 
       for (const chunk of inertResult) {
         // 提交队列处理任务
-        await documentQueue.add(DOCUMENT_EMBEDING_QUEUE, chunk);
+        await documentQueue.add(DOCUMENT_EMBEDDING_QUEUE, chunk);
       }
     });
 
