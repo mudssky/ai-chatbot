@@ -20,6 +20,8 @@ const BUCKET_NAME = process.env.MINIO_PROJECT_BUCKET ?? '';
 /**
  * 上传知识库文档
  */
+const MAX_FILE_SIZE = 1024 * 1024 * 50; // 10MB
+
 export const POST = withAuth(async ({ request, userId }) => {
   try {
     const formData = await request?.formData();
@@ -38,6 +40,12 @@ export const POST = withAuth(async ({ request, userId }) => {
     const fileExtension = file.name.split('.').pop() ?? '';
     if (!allowExts.includes(fileExtension?.toLowerCase())) {
       return NextResponse.json({ error: '不支持的文件格式' }, { status: 400 });
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: '文件大小超过50MB限制' },
+        { status: 413 },
+      );
     }
 
     const res = await uploadFile(BUCKET_NAME, file);
