@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createUser, getUser } from '@/lib/db/queries';
 
 import { signIn } from './auth';
+import { logger } from '@/lib/logger';
 
 const authFormSchema = z.object({
   email: z.string().email(),
@@ -75,6 +76,7 @@ export const register = async (
 
     return { status: 'success' };
   } catch (error) {
+    logger.error(error);
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }
