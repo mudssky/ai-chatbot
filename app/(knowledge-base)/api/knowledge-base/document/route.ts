@@ -156,6 +156,14 @@ export const DELETE = withAuth(async ({ request, userId }) => {
     if (!res) {
       return NextResponse.json({ error: '文档不存在' }, { status: 404 });
     }
+    // 充值文档状态
+    await updateKnowledgeDocument({
+      id: res[0].knowledgeBaseId,
+      updates: {
+        chunkCount: null,
+        processingStatus: 'pending',
+      } satisfies UpdateKnowledgeDocumentParam,
+    });
 
     // 删除MinIO中的文件
     await deleteFile(BUCKET_NAME, res[0].filePath);

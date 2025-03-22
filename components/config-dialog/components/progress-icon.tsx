@@ -1,7 +1,7 @@
 import { Tooltip } from 'antd';
 import { Clock, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
-interface ProgressIconProps {
+export interface ProgressIconProps {
   status?: 'pending' | 'processing' | 'completed' | 'failed';
   className?: string;
 }

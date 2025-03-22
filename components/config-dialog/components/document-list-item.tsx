@@ -30,7 +30,7 @@ export function DocumentListItem({
         </div>
       </div>
       <Space>
-        <ProgressIcon status={'failed'} />
+        <ProgressIcon status={document.processingStatus} />
         <AsyncButton
           variant="ghost"
           size="sm"

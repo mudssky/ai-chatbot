@@ -9,7 +9,8 @@ import { message, Upload, type UploadProps } from 'antd';
 import { useEffect, useState } from 'react';
 import { confirm } from '@/components/confirm';
 import { DocumentListItem } from './document-list-item';
-
+import { createPolling } from '@mudssky/jsutils';
+import type { ProgressIconProps } from './progress-icon';
 type UploadAreaProps = {
   selectedKnowledgeBase: KnowledgeBase | null;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -39,6 +40,26 @@ export function UploadArea({
       setLoading(false);
     }
   };
+  const p = createPolling({
+    task: async () => {
+      await fetchDocuments();
+    },
+    interval: 3000,
+    stopCondition: (result: unknown): boolean => {
+      return documents.every((item) =>
+        (['failed', 'completed'] as ProgressIconProps['status'][]).includes(
+          item.processingStatus,
+        ),
+      );
+    },
+  });
+
+  useEffect(() => {
+    p.start();
+    return () => {
+      p.stop();
+    };
+  }, []);
 
   useEffect(() => {
     fetchDocuments();
@@ -66,7 +87,7 @@ export function UploadArea({
   const props: UploadProps = {
     name: 'file',
     multiple: true,
-    showUploadList: true,
+    showUploadList: false,
     async beforeUpload(file, fileList) {
       const formData = new FormData();
       formData.append('file', file);
