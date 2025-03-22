@@ -1,0 +1,12 @@
+{
+  // 配置默认格式化工具
+  "editor.defaultFormatter": "biomejs.biome",
+  // 配置默认格式化工具
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
+}
