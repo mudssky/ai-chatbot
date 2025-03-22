@@ -25,6 +25,8 @@ import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import { useKnowledgeBaseStore } from '@/store/knowledgeBaseStore';
+import { KnowledgeBaseSelector } from '@/components/knowledge-base-selector';
 
 function PureMultimodalInput({
   chatId,
@@ -55,6 +57,30 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+
+  const knowledgeBases = useKnowledgeBaseStore((state) => state.knowledgeBases);
+  const setKnowledgeBases = useKnowledgeBaseStore(
+    (state) => state.setKnowledgeBases,
+  );
+  const selectedKnowledgeBases = useKnowledgeBaseStore(
+    (state) => state.selectedKnowledgeBases,
+  );
+
+  // Fetch knowledge bases
+  useEffect(() => {
+    const fetchKnowledgeBases = async () => {
+      try {
+        const response = await fetch('/api/knowledge-base');
+        if (!response.ok) throw new Error('获取失败');
+        const data = await response.json();
+        setKnowledgeBases(data.data || []);
+      } catch (error) {
+        console.error('获取知识库列表失败', error);
+      }
+    };
+
+    fetchKnowledgeBases();
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -126,6 +152,7 @@ function PureMultimodalInput({
     setLocalStorageInput,
     width,
     chatId,
+    selectedKnowledgeBases,
   ]);
 
   const uploadFile = async (file: File) => {
@@ -250,9 +277,15 @@ function PureMultimodalInput({
         }}
       />
 
+      {knowledgeBases.length > 0 && (
+        <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+          <KnowledgeBaseSelector />
+        </div>
+      )}
+
       {/* <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-      </div> */}
+      <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+    </div> */}
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {status === 'submitted' ? (
