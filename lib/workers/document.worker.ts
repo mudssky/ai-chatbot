@@ -73,19 +73,50 @@ export const worker = new Worker<DocumentJobData>(
     removeOnFail: { count: 1000 },
   },
 );
-worker.on('completed', (job) => {
-  logger.info(`Document processed: ${job.id}`, job.returnvalue);
+worker.on('completed', (job, result) => {
+  logger.info({
+    message: `文档处理完成 | 任务ID:${job.id}`,
+    documentId: job.data.documentId,
+    chunkIndex: job.data.chunkIndex,
+    duration:
+      job.processedOn && job.finishedOn
+        ? job.finishedOn - job.processedOn
+        : undefined,
+    metadata: {
+      job: job.asJSON(), // 结构化日志元数据
+      result,
+    },
+  });
 });
 
 worker.on('failed', (job, err) => {
-  logger.warning(`Document process failed: ${job?.id}`, err);
+  logger.warning({
+    message: `文档处理失败 | 任务ID:${job?.id ?? 'unknown'}`,
+    error: err.stack || err.message,
+    retryCount: job?.attemptsMade,
+    lastAttempt: job?.attemptsMade === job?.opts.attempts,
+    documentId: job?.data.documentId,
+    chunkData: job?.data, // 保留失败任务数据用于调试
+  });
 });
 
-// 添加以下事件监听器
 worker.on('error', (err) => {
-  logger.error({ message: 'Worker error', error: err });
+  logger.error({
+    message: '工作线程异常',
+    error: err.stack || err.message,
+    pid: process.pid, // 添加进程信息
+    timestamp: new Date().toISOString(),
+  });
 });
 
-worker.on('active', (job) => {
-  logger.info(`Processing job ${job.id}`);
+worker.on('active', async (job) => {
+  logger.debug({
+    message: `开始处理分片 | 任务ID:${job.id}`,
+    chunkIndex: job.data.chunkIndex,
+    documentId: job.data.documentId,
+    queueStats: {
+      // 添加队列状态上下文
+      waiting: await redisClient.llen(DOCUMENT_EMBEDDING_QUEUE),
+    },
+  });
 });
