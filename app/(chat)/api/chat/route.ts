@@ -97,6 +97,9 @@ export async function POST(request: Request) {
         .join('\n');
     }
     const sysPrompt = systemPrompt({ selectedChatModel, knowledgeContext });
+    console.log('System Prompt:', sysPrompt); // 添加系统提示日志
+    console.log('Knowledge Context:', knowledgeContext); // 添加知识库上下文日志
+    console.log('Selected Chat Model:', selectedChatModel); // 添加模型选择日志
     return createDataStreamResponse({
       execute: (dataStream) => {
         const result = streamText({
