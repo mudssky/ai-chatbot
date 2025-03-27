@@ -1,12 +1,8 @@
-import {
-  type Message,
-  createDataStreamResponse,
-  smoothStream,
-  streamText,
-} from 'ai';
+import { createDataStreamResponse, smoothStream, streamText } from 'ai';
 import { auth } from '@/app/(auth)/auth';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
+  db,
   deleteChatById,
   getChatById,
   saveChat,
@@ -18,27 +14,20 @@ import {
   sanitizeResponseMessages,
 } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { NextResponse } from 'next/server';
 import { myProvider } from '@/lib/ai/providers';
+import type { ChatParams } from '@/components/chat';
+import { knowledgeChunk, knowledgeDocument } from '@/lib/db/schema';
+import { cosineDistance, desc, inArray, sql } from 'drizzle-orm';
+import { generateEmbedding } from '@/lib/ai/rag';
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
-    const {
-      id,
-      messages,
-      selectedChatModel,
-    }: {
-      id: string;
-      messages: Array<Message>;
-      selectedChatModel: string;
-    } = await request.json();
+    const res = (await request.json()) as ChatParams;
+    const { id, messages, selectedChatModel, selectedKnowledgeBases } = res;
     console.log({ selectedChatModel });
     const session = await auth();
 
@@ -70,11 +59,49 @@ export async function POST(request: Request) {
       messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
     });
 
+    const userMessageEmb = await generateEmbedding(userMessage.content);
+    const similarity = sql<number>`1 - (${cosineDistance(
+      knowledgeChunk.vector,
+      userMessageEmb,
+    )})`;
+    // 先查询知识库的所有文档id
+    const documentIds = (
+      await db
+        .select({
+          id: knowledgeDocument.id,
+        })
+        .from(knowledgeDocument)
+        .where(
+          inArray(knowledgeDocument.knowledgeBaseId, selectedKnowledgeBases),
+        )
+    ).map((item) => item.id);
+    // 添加知识库向量检索功能
+    let knowledgeContext = '';
+    if (selectedKnowledgeBases && selectedKnowledgeBases.length > 0) {
+      const knowledgeChunks = await db
+        .select({
+          id: knowledgeChunk.id,
+          content: knowledgeChunk.content,
+          documentId: knowledgeChunk.documentId,
+          vector: knowledgeChunk.vector,
+          processingError: knowledgeChunk.processingError,
+          similarity,
+        })
+        .from(knowledgeChunk)
+        .where(inArray(knowledgeChunk.documentId, documentIds))
+        .orderBy((t) => desc(t.similarity))
+        .limit(3); // 限制检索结果数量
+
+      knowledgeContext = knowledgeChunks
+        .map((chunk) => chunk.content)
+        .join('\n');
+    }
+    const sysPrompt = systemPrompt({ selectedChatModel, knowledgeContext });
     return createDataStreamResponse({
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel }),
+          system: sysPrompt,
           messages,
           maxSteps: 5,
           // 推理模型deepseek-r1不支持functional calling
@@ -89,15 +116,15 @@ export async function POST(request: Request) {
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-          },
+          // tools: {
+          //   getWeather,
+          //   createDocument: createDocument({ session, dataStream }),
+          //   updateDocument: updateDocument({ session, dataStream }),
+          //   requestSuggestions: requestSuggestions({
+          //     session,
+          //     dataStream,
+          //   }),
+          // },
           onFinish: async ({ response, reasoning }) => {
             if (session.user?.id) {
               try {
@@ -134,7 +161,8 @@ export async function POST(request: Request) {
           sendReasoning: true,
         });
       },
-      onError: () => {
+      onError: (err) => {
+        console.error({ err });
         return 'Oops, an error occured!';
       },
     });

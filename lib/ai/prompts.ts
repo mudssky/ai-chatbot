@@ -36,15 +36,17 @@ export const regularPrompt =
 
 export const systemPrompt = ({
   selectedChatModel,
+  knowledgeContext,
 }: {
   selectedChatModel: string;
+  // 知识库上下文
+  knowledgeContext: string;
 }) => {
-  return regularPrompt;
-  // if (selectedChatModel === 'chat-model-reasoning') {
-  //   return regularPrompt;
-  // } else {
-  //   return `${regularPrompt}\n\n${artifactsPrompt}`;
-  // }
+  let basePrompt = regularPrompt;
+  if (knowledgeContext) {
+    basePrompt += `\n\n以下是相关的知识库上下文，供你参考：\n${knowledgeContext}`;
+  }
+  return basePrompt;
 };
 
 export const codePrompt = `

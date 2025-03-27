@@ -19,6 +19,11 @@ export const chatModels: Array<ChatModel> = [
     name: 'deepseek R1',
     description: 'deepseek reasoning 1',
   },
+  {
+    id: 'deepseek-r1:1.5b',
+    name: 'deepseek r1:1.5b',
+    description: 'deepseek reasoning 1:1.5b',
+  },
   // {
   //   id: 'chat-model-reasoning',
   //   name: 'Reasoning model',

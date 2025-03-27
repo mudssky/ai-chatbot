@@ -13,7 +13,13 @@ import { Messages } from './messages';
 import type { VisibilityType } from './visibility-selector';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
-
+import { useKnowledgeBaseStore } from '@/store/knowledgeBaseStore';
+export type ChatParams = {
+  id: string;
+  messages: Array<Message>;
+  selectedChatModel: string;
+  selectedKnowledgeBases: string[];
+};
 export function Chat({
   id,
   initialMessages,
@@ -28,7 +34,9 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
-
+  const selectedKnowledgeBases = useKnowledgeBaseStore(
+    (state) => state.selectedKnowledgeBases,
+  );
   const {
     messages,
     setMessages,
@@ -41,7 +49,7 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel },
+    body: { id, selectedChatModel: selectedChatModel, selectedKnowledgeBases },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
