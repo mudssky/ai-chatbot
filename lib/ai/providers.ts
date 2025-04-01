@@ -37,7 +37,10 @@ export const myProvider = isTestEnvironment
         // }),
         'title-model': deepseek('deepseek-chat'),
         // 'artifact-model': openai('gpt-4o-mini'),
-        'deepseek-r1:1.5b': ollama('deepseek-r1:1.5b'),
+        'deepseek-r1:1.5b': wrapLanguageModel({
+          model: ollama('deepseek-r1:1.5b'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
         // 'deepseek-r1:1.5b': wrapLanguageModel({
         //   model: ollama('deepseek-r1:1.5b'),
         //   middleware: extractReasoningMiddleware({ tagName: 'think' }),
