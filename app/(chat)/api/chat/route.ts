@@ -59,44 +59,51 @@ export async function POST(request: Request) {
       messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
     });
 
-    const userMessageEmb = await generateEmbedding(userMessage.content);
-    const similarity = sql<number>`1 - (${cosineDistance(
-      knowledgeChunk.vector,
-      userMessageEmb,
-    )})`;
-    // 先查询知识库的所有文档id
-    const documentIds = (
-      await db
-        .select({
-          id: knowledgeDocument.id,
-        })
-        .from(knowledgeDocument)
-        .where(
-          inArray(knowledgeDocument.knowledgeBaseId, selectedKnowledgeBases),
-        )
-    ).map((item) => item.id);
+    let sysPrompt = '';
     // 添加知识库向量检索功能
     let knowledgeContext = '';
-    if (selectedKnowledgeBases && selectedKnowledgeBases.length > 0) {
-      const knowledgeChunks = await db
-        .select({
-          id: knowledgeChunk.id,
-          content: knowledgeChunk.content,
-          documentId: knowledgeChunk.documentId,
-          vector: knowledgeChunk.vector,
-          processingError: knowledgeChunk.processingError,
-          similarity,
-        })
-        .from(knowledgeChunk)
-        .where(inArray(knowledgeChunk.documentId, documentIds))
-        .orderBy((t) => desc(t.similarity))
-        .limit(3); // 限制检索结果数量
+    if (selectedKnowledgeBases) {
+      const userMessageEmb = await generateEmbedding(userMessage.content);
+      const similarity = sql<number>`1 - (${cosineDistance(
+        knowledgeChunk.vector,
+        userMessageEmb,
+      )})`;
+      // 先查询知识库的所有文档id
+      const documentIds = (
+        await db
+          .select({
+            id: knowledgeDocument.id,
+          })
+          .from(knowledgeDocument)
+          .where(
+            inArray(knowledgeDocument.knowledgeBaseId, selectedKnowledgeBases),
+          )
+      ).map((item) => item.id);
 
-      knowledgeContext = knowledgeChunks
-        .map((chunk) => chunk.content)
-        .join('\n');
+      if (selectedKnowledgeBases && selectedKnowledgeBases.length > 0) {
+        const knowledgeChunks = await db
+          .select({
+            id: knowledgeChunk.id,
+            content: knowledgeChunk.content,
+            documentId: knowledgeChunk.documentId,
+            vector: knowledgeChunk.vector,
+            processingError: knowledgeChunk.processingError,
+            similarity,
+          })
+          .from(knowledgeChunk)
+          .where(inArray(knowledgeChunk.documentId, documentIds))
+          .orderBy((t) => desc(t.similarity))
+          .limit(3); // 限制检索结果数量
+
+        knowledgeContext = knowledgeChunks
+          .map((chunk) => chunk.content)
+          .join('\n');
+      }
+      sysPrompt = systemPrompt({ selectedChatModel, knowledgeContext });
+    } else {
+      sysPrompt = systemPrompt({ selectedChatModel });
     }
-    const sysPrompt = systemPrompt({ selectedChatModel, knowledgeContext });
+
     console.log('System Prompt:', sysPrompt); // 添加系统提示日志
     console.log('Knowledge Context:', knowledgeContext); // 添加知识库上下文日志
     console.log('Selected Chat Model:', selectedChatModel); // 添加模型选择日志
@@ -164,9 +171,14 @@ export async function POST(request: Request) {
           sendReasoning: true,
         });
       },
-      onError: (err) => {
-        console.error({ err });
-        return 'Oops, an error occured!';
+      onError: (err: any) => {
+        console.error('Stream Error:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name,
+          cause: err.cause,
+        });
+        return 'Oops, an error occurred while processing your request';
       },
     });
   } catch (error) {

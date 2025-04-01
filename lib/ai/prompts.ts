@@ -40,7 +40,7 @@ export const systemPrompt = ({
 }: {
   selectedChatModel: string;
   // 知识库上下文
-  knowledgeContext: string;
+  knowledgeContext?: string;
 }) => {
   let basePrompt = regularPrompt;
   if (knowledgeContext) {
